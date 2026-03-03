@@ -55,8 +55,9 @@ function initLocalTeams(teams) {
  *   apiKey       - Anthropic API key
  *   timerSec     - 제한 시간 (초)
  *   onComplete   - (roundTeams) => void
+ *   socket       - (선택) Socket.io 인스턴스 — 학생 제출 수신용
  */
-export default function BattleRound({ challenge, teams, apiKey, timerSec, onComplete }) {
+export default function BattleRound({ challenge, teams, apiKey, timerSec, onComplete, socket }) {
   const [localTeams, setLocalTeams] = useState(() => initLocalTeams(teams));
   const [phase, setPhase] = useState("input"); // input | generating | judging | done
   const [timeLeft, setTimeLeft] = useState(timerSec);
@@ -64,6 +65,22 @@ export default function BattleRound({ challenge, teams, apiKey, timerSec, onComp
   const [showExp, setShowExp] = useState(false);
   const timerRef = useRef(null);
   const iframeRefs = useRef({});
+
+  // 학생 제출 수신 (Socket.io)
+  useEffect(() => {
+    if (!socket) return;
+    const handleUpdate = ({ teamId, prompt, submitted }) => {
+      if (phase !== "input") return;
+      setLocalTeams((prev) =>
+        prev.map((t) =>
+          t.id === teamId ? { ...t, prompt, submitted: submitted || t.submitted } : t
+        )
+      );
+    };
+    socket.on("prompt-update", handleUpdate);
+    return () => socket.off("prompt-update", handleUpdate);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, phase]);
 
   // 타이머
   useEffect(() => {

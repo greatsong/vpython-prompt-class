@@ -3,8 +3,14 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  base: "/prompt-coding/",
+  base: "/",
   server: {
     port: 4008,
+    proxy: {
+      "/socket.io": {
+        target: "http://localhost:4009",
+        ws: true,
+      },
+    },
   },
 });

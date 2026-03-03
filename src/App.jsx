@@ -211,6 +211,24 @@ export default function App() {
   const next = () => setStep((s) => Math.min(s + 1, totalSteps - 1));
   const prev = () => setStep((s) => Math.max(s - 1, 0));
 
+  // 소켓 연결
+  useEffect(() => {
+    socket.connect();
+    return () => socket.disconnect();
+  }, []);
+
+  // 배틀 단계 시작 시 챌린지 이벤트 전송
+  useEffect(() => {
+    if (current.type === "battle" && teams.length > 0) {
+      const ch = CHALLENGES[current.challengeIndex];
+      socket.emit("start-challenge", { challenge: ch, teams });
+    }
+    if (current.type === "reflection") {
+      socket.emit("reset-challenge");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   const handleBattleDone = (roundTeams) => {
     // 누적 점수 업데이트
     const updated = teams.map((t) => {
@@ -346,6 +364,51 @@ export default function App() {
                   ))}
                 </div>
               )}
+            </Card>
+
+            {/* 학생 접속 URL */}
+            <Card>
+              <Label>📱 학생 접속 링크</Label>
+              <div style={{ fontSize: "0.8rem", color: "#94a3b8", marginBottom: 8 }}>
+                학생들이 같은 WiFi에서 아래 주소로 접속합니다
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: "rgba(0,0,0,0.3)",
+                  borderRadius: 10,
+                  padding: "10px 14px",
+                  fontFamily: "monospace",
+                  fontSize: "0.88rem",
+                  color: "#a78bfa",
+                  wordBreak: "break-all",
+                }}
+              >
+                <span style={{ flex: 1 }}>{window.location.origin}/student</span>
+                <button
+                  onClick={() => navigator.clipboard.writeText(`${window.location.origin}/student`)}
+                  style={{
+                    background: "rgba(167,139,250,0.15)",
+                    border: "none",
+                    borderRadius: 6,
+                    padding: "4px 10px",
+                    color: "#a78bfa",
+                    cursor: "pointer",
+                    fontSize: "0.75rem",
+                    fontFamily: "inherit",
+                    flexShrink: 0,
+                  }}
+                >
+                  복사
+                </button>
+              </div>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`${window.location.origin}/student`)}`}
+                alt="QR 코드"
+                style={{ marginTop: 10, borderRadius: 8, display: "block" }}
+              />
             </Card>
 
             <button
@@ -506,6 +569,7 @@ export default function App() {
             apiKey={apiKey}
             timerSec={timerSec}
             onComplete={handleBattleDone}
+            socket={socket}
           />
         </div>
       </div>
