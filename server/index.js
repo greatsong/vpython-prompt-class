@@ -70,8 +70,24 @@ if (existsSync(distPath)) {
   app.get('/{*path}', (_, res) => res.sendFile(join(distPath, 'index.html')));
 }
 
+import { networkInterfaces } from 'os';
+
+function getLocalIP() {
+  const nets = networkInterfaces();
+  for (const iface of Object.values(nets)) {
+    for (const net of iface) {
+      if (net.family === 'IPv4' && !net.internal) return net.address;
+    }
+  }
+  return 'localhost';
+}
+
 const PORT = process.env.PORT || 4009;
-httpServer.listen(PORT, () => {
-  console.log(`\n🚀 VPython 서버 실행 중: http://localhost:${PORT}`);
-  console.log(`📱 학생 접속: http://localhost:${PORT}/student\n`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+  const ip = getLocalIP();
+  console.log(`\n🚀 VPython 서버 실행 중`);
+  console.log(`   로컬:    http://localhost:${PORT}`);
+  console.log(`   네트워크: http://${ip}:${PORT}`);
+  console.log(`\n📱 학생 접속 (교사 앱을 아래 주소로 열어주세요)`);
+  console.log(`   → http://${ip}:4008\n`);
 });

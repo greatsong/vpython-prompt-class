@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --port 4008",
+    "dev": "vite --port 4008 --host",
     "dev:server": "node --watch server/index.js",
     "dev:all": "concurrently -n client,server -c cyan,magenta \"npm run dev\" \"npm run dev:server\"",
     "build": "vite build",
